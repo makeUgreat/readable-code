@@ -1,5 +1,11 @@
 package cleancode.minesweeper.tobe;
 
+import cleancode.minesweeper.tobe.cell.Cell;
+import cleancode.minesweeper.tobe.cell.EmptyCell;
+import cleancode.minesweeper.tobe.cell.LandMineCell;
+import cleancode.minesweeper.tobe.cell.NumberCell;
+import cleancode.minesweeper.tobe.gamelevel.GameLevel;
+
 import java.util.Arrays;
 import java.util.Random;
 
@@ -7,26 +13,30 @@ public class GameBoard {
     private static final int LAND_MINE_COUNT = 10;
 
     private final Cell[][] board;
+    private final int landMineCount;
 
-    public GameBoard(int rowSize, int columnSize) {
+    public GameBoard(GameLevel gameLevel) {
+        int columnSize = gameLevel.getColSize();
+        int rowSize = gameLevel.getRowSize();
         board = new Cell[rowSize][columnSize];
+
+        landMineCount = gameLevel.getLandMineCount();
     }
 
     public void initializeGame() {
-        int rowSize = board.length;
-        int columnSize = board[0].length;
+        int rowSize = getRowSize();
+        int columnSize = getColumnSize();
 
         for (int row = 0; row < rowSize; row++) {
             for (int col = 0; col < columnSize; col++) {
-                board[row][col] = Cell.create();
+                board[row][col] = new EmptyCell();
             }
         }
 
         for (int i = 0; i < LAND_MINE_COUNT; i++) {
             int landMineCol = new Random().nextInt(10);
             int landMineRow = new Random().nextInt(8);
-            Cell landMineCell = findCell(landMineRow, landMineCol);
-            landMineCell.turnOnLandMine();
+            board[landMineRow][landMineCol] = new LandMineCell();
         }
 
         for (int row = 0; row < rowSize; row++) {
@@ -36,8 +46,11 @@ public class GameBoard {
                 }
 
                 int count = countNearbyLandMines(row, col);
-                Cell cell = findCell(row, col);
-                cell.updateNearbyLandMineCount(count);
+                if (count == 0) {
+                    continue;
+                }
+
+                board[row][col] = new NumberCell(count);
             }
         }
     }
